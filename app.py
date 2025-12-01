@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 # 1. 환경 변수 로드 (.env 파일이 같은 폴더에 있어야 함)
 load_dotenv()
 
-st.title("🤖 나의 첫 AI 챗봇")
+st.title("🤖 민사판례 이해하기 쉽게 설명해드려요!")
+st.caption("판례 번호를 입력하거나, 판결문 파일을 올려주세요.")
 
 # 2. Azure OpenAI 클라이언트 설정
 # (실제 값은 .env 파일이나 여기에 직접 입력하세요)
@@ -18,7 +19,8 @@ client = AzureOpenAI(
 
 # 3. 대화기록(Session State) 초기화 - 이게 없으면 새로고침 때마다 대화가 날아갑니다!
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [{"role": "assistant", "content" : 
+    "너는 30년 경력의 민사소송법 전문 강사야. 비전공자도 이해하기 쉽게 법률 용어를 쉬운 비유를 들어 설명하고, 판례 번호를 주면 핵심 쟁점과 결론을 명확히 요약해줘. 말투는 정중하지만 친절하게 해줘."}]
 
 # 4. 화면에 기존 대화 내용 출력
 for message in st.session_state.messages:
