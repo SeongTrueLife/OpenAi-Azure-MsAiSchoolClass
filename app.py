@@ -94,6 +94,34 @@ if prompt := st.chat_input("무엇을 도와드릴까요?"):
     )
         answer = response.choices[0].message.content
         st.markdown(answer)
+        # [새로 추가하는 기능] RAG가 참고한 문서의 링크 보여주기
+        # Azure OpenAI 응답(response) 안에는 'message' 속에 숨겨진 'context' 정보가 있습니다.
+        # 이 context 안에 검색된 문서들의 제목(title), 주소(url) 등이 들어있습니다.
+        
+        # 1. 응답 메시지에 'context' 정보가 있는지 확인합니다. (안전장치)
+        if hasattr(response.choices[0].message, "context"):
+            
+            # 2. context 정보 덩어리를 가져옵니다.
+            doc_context = response.choices[0].message.context
+            
+            # 3. 그 안에 'citations'(인용/참고문헌) 목록이 있다면 작업을 시작합니다.
+            if "citations" in doc_context:
+                citations = doc_context["citations"]
+                
+                # 4. 링크가 너무 길게 나오면 채팅창이 지저분해지니, '접기/펼치기' 버튼을 만듭니다.
+                with st.expander("📚 참고한 판례/자료 출처 보기"):
+                    for citation in citations:
+                        # 5. 각 참고 자료에서 제목과 URL을 안전하게 꺼냅니다.
+                        # .get("키 이름", "기본값")을 쓰면 데이터가 비어있어도 에러가 안 납니다.
+                        title = citation.get("title", "제목 없음")
+                        url = citation.get("url", None)
+                        filepath = citation.get("filepath", "")
+                        
+                        # 6. URL이 있으면 클릭 가능한 링크로, 없으면 파일명만 보여줍니다.
+                        if url:
+                            st.markdown(f"- [{title}]({url})")
+                        else:
+                            st.markdown(f"- {title} (파일: {filepath})")
 
     # (3) AI 응답 저장
     st.session_state.messages.append({"role": "assistant", "content": answer})
