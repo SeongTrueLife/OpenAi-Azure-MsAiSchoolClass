@@ -1,3 +1,6 @@
 streamlit
 openai
 python-dotenv
+PyPDF2
+azure-search-documents
+azure-identity

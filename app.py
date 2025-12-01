@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import PyPDF2
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 
@@ -13,6 +14,33 @@ search_index = os.getenv("SEARCH_INDEX_NAME", "fileupload-civil-procedure-2024-j
 
 st.title("🤖 민사판례 이해하기 쉽게 설명해드려요!")
 st.caption("판례 번호를 입력하거나, 판결문 파일을 올려주세요.")
+with st.sidebar:
+    st.header("📄 판결문 업로드")
+    uploaded_file = st.file_uploader("PDF 파일을 여기에 드래그하세요", type=["pdf"])
+    
+    # 파일이 올라오면 실행되는 부분
+    if uploaded_file is not None:
+        try:
+            # 1. PDF 파일 읽기
+            reader = PyPDF2.PdfReader(uploaded_file)
+            pdf_text = ""
+            
+            # 2. 모든 페이지의 텍스트 추출
+            for page in reader.pages:
+                pdf_text += page.extract_text()
+            
+            # 3. 추출된 텍스트를 챗봇에게 '참고 자료'로 넘겨주기 위해 세션에 저장
+            # (이미 저장된 적 없으면 저장)
+            if "pdf_context" not in st.session_state or st.session_state.pdf_context != pdf_text:
+                st.session_state.pdf_context = pdf_text
+                # 시스템 메시지에 PDF 내용 추가 (강제로 주입!)
+                st.session_state.messages.append(
+                    {"role": "system", "content": f"사용자가 업로드한 문서 내용이야. 질문에 답할 때 이 내용을 최우선으로 참고해:\n\n{pdf_text}"}
+                )
+                st.success("판결문 내용을 다 읽었습니다! 질문하세요.")
+                
+        except Exception as e:
+            st.error(f"파일을 읽는 중 에러가 났어요: {e}")
 
 # 2. Azure OpenAI 클라이언트 설정
 # (실제 값은 .env 파일이나 여기에 직접 입력하세요)
